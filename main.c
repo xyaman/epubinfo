@@ -21,16 +21,19 @@
 #define EOCDR_OFF_COMMENT_LEN        0x14  // 2 bytes
 #define EOCDR_OFF_COMMENT            0x16  // n bytes
 
-
 #define CDR_LEN_FIXED               46
 #define CDR_OFF_SIGNATURE           0x02014b50
 #define CDR_OFF_SIGNATURE_LEN       4
+#define CDR_OFF_COMPRESSION_METHOD  10
+#define CDR_OFF_COMPRESSED_SIZE     20
+#define CDR_OFF_UNCOMPRESSED_SIZE   24
 #define CDR_OFF_FILENAME_LEN        28
 #define CDR_OFF_EXTRA_FIELD_LEN     30
 #define CDR_OFF_FILE_COMMENT_LEN    32
 #define CDR_OFF_FILE_HEADER         42
 #define CDR_OFF_FILENAME            46
 
+#define LFH_LEN_FIXED               30
 
 
 // ZIP Notes
@@ -57,10 +60,15 @@ typedef struct {
 } eocdr_header_t;
 
 typedef struct {
+    uint32_t uncompressed_size;
+    uint32_t compressed_size;
+    uint32_t file_offset;
+    uint16_t filename_len;
+    uint16_t extra_field_len;
+    uint16_t compression_method;
     char filename[1024];
-    size_t filename_len;
-    size_t file_offset;
 } zip_entry_t;
+
 
 /// All values of header are initialized on success.
 /// Return 1 on success, 0 otherwise.
@@ -96,7 +104,6 @@ int read_end_of_central_directory_record(FILE *fp, eocdr_header_t *header) {
             uint32_t found_signature = *(uint32_t *)(buffer + i);
             if (found_signature == EOCDR_SIGNATURE) {
                 signature_start_position = position + i;
-                printf("Found signature at: %zu\n", position + i);
                 break;
             }
         }
@@ -167,8 +174,12 @@ zip_entry_t* read_central_directory(FILE *fp, eocdr_header_t header) {
         entry.filename[filename_len] = 0;
         entry.filename_len = filename_len;
 
-        entries[i] = entry;
+        entry.compression_method = read_le16(&buffer[CDR_OFF_COMPRESSION_METHOD]);
+        entry.compressed_size = read_le32(&buffer[CDR_OFF_COMPRESSED_SIZE]);
+        entry.uncompressed_size = read_le32(&buffer[CDR_OFF_UNCOMPRESSED_SIZE]);
+        entry.extra_field_len = extra_len;
 
+        entries[i] = entry;
         offset += CDR_LEN_FIXED + filename_len + extra_len + comment_len;
     }
 
@@ -176,8 +187,45 @@ zip_entry_t* read_central_directory(FILE *fp, eocdr_header_t header) {
 }
 
 
-void parse_metadata(FILE *fp) {
+/// `output` will be allocated inside this function
+unsigned char *uncompress_entry(FILE *fp, zip_entry_t *entry) {
+
+    fseek(fp, LFH_LEN_FIXED + entry->file_offset + entry->filename_len + entry->extra_field_len, SEEK_SET);
+    unsigned char *compressed_data = malloc(entry->compressed_size);
+
+    fread(compressed_data, sizeof(unsigned char), entry->compressed_size, fp);
+    unsigned char *output = malloc(entry->uncompressed_size);
+
+    if (entry->compression_method == 0) {
+    } else if (entry->compression_method == 8) {
+        z_stream strm = {0};
+        strm.next_in = compressed_data;
+        strm.avail_in = entry->compressed_size;
+        strm.next_out = output;
+        strm.avail_out = entry->uncompressed_size;
+
+        if (inflateInit2(&strm, -MAX_WBITS) != Z_OK) {
+            free(compressed_data);
+            free(output);
+            printf("error inflateInit2\n");
+            return NULL;
+        }
+
+        int ret;
+        if ((ret = inflate(&strm, Z_FINISH)) != Z_STREAM_END) {
+            free(compressed_data);
+            free(output);
+            printf("error: inflate\n");
+            return NULL;
+        }
+
+        inflateEnd(&strm);
+    }
+
+    free(compressed_data);
+    return output;
 }
+
 
 int main(int argc, char** argv) {
     if (argc < 2) {
@@ -187,50 +235,64 @@ int main(int argc, char** argv) {
 
     clock_t t0 = clock();
 
-    FILE *epub_fp = fopen(argv[1], "rb");
-    if (epub_fp == NULL) {
+    FILE *fp = fopen(argv[1], "rb");
+    if (fp == NULL) {
         printf("Error opening %s, error code: %d\n", argv[1], errno);
         return 1;
     }
 
     unsigned char header_buffer[ZIP_HEADER_LEN];
-    fread(header_buffer, sizeof(unsigned char), ZIP_HEADER_LEN, epub_fp);
+    fread(header_buffer, sizeof(unsigned char), ZIP_HEADER_LEN, fp);
 
     if (!(header_buffer[0] == 0x50 && header_buffer[1] == 0x4b && header_buffer[2] == 0x03 && header_buffer[3] == 0x04)) {
         printf("Invalid zip header file. Exiting...\n");
-        fclose(epub_fp);
+        fclose(fp);
         return 1;
     }
-    printf("Valid zip file: %f seconds\n", (double)(clock() - t0) / CLOCKS_PER_SEC);
 
-
-    t0 = clock();
     eocdr_header_t header;
-    int success = read_end_of_central_directory_record(epub_fp, &header);
+    int success = read_end_of_central_directory_record(fp, &header);
     if (!success) {
         printf("Can't find End Of Central Directory Record\n");
-        fclose(epub_fp);
+        fclose(fp);
         return 1;
     }
 
-    printf("EOCDR found: %f seconds\n", (double)(clock() - t0) / CLOCKS_PER_SEC);
-
-    zip_entry_t *entries = read_central_directory(epub_fp, header);
+    zip_entry_t *entries = read_central_directory(fp, header);
     if (entries == NULL) {
         printf("Error reading Central Directory Record\n");
-        fclose(epub_fp);
+        fclose(fp);
         return 1;
     }
 
+    zip_entry_t container = {0};
     for (int i = 0; i < header.num_of_entries; i++) {
         if (entries[i].filename_len == 0) continue;
         if (entries[i].filename[entries[i].filename_len - 1] == '/') continue;
-        printf("%d. filename: %s, offset: %zu\n", i, entries[i].filename, entries[i].file_offset);
+
+        if (strcmp(entries[i].filename, "META-INF/container.xml") == 0) {
+            container = entries[i];
+            break;
+        }
     }
 
-    fclose(epub_fp);
+    printf(
+        "filename: %s, compressed: %hu, offset: %u, size: %u\n",
+        container.filename,
+        container.compression_method,
+        container.file_offset,
+        container.compressed_size
+    );
+
+
+    unsigned char *out_buffer = uncompress_entry(fp, &container);
+    if (out_buffer != NULL) {
+        printf("container content: %.*s\n", container.uncompressed_size, out_buffer);
+    }
+
+    fclose(fp);
     free(entries);
 
-    printf("Total time: %f seconds\n", (double)(clock() - t0) / CLOCKS_PER_SEC);
+    printf("\nTotal time: %f seconds\n", (double)(clock() - t0) / CLOCKS_PER_SEC);
     return 0;
 }
