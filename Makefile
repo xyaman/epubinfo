@@ -1,18 +1,18 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -pedantic
 RELEASE_FLAGS=-O2
-PKG=-lz
+PKG=-I./include -lz
 
 SRC=main.c
-OUT=.bin/epubinfo
+OUT=./bin/epubinfo
 
 all:
 	mkdir -p bin
-	$(CC) $(CFLAGS) $(PKG) $(SRC) -o $(OUT)
+	$(CC) $(CFLAGS) $(SRC) $(PKG) -o $(OUT)
 
 release:
 	mkdir -p bin
-	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(PKG) $(SRC) -o $(OUT)
+	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(SRC) $(PKG) -o $(OUT)
 
 clean:
 	rm -rf bin
