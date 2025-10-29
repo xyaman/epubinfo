@@ -1,18 +1,38 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -pedantic
+CFLAGS=-Wall -Wextra -pedantic -fPIC
 RELEASE_FLAGS=-O2
 PKG=-I./include -lz
 
-SRC=$(wildcard src/*.c)
-OUT=./bin/epubinfo
+SRC_BIN=$(wildcard src/*.c)
+SRC_LIB=$(filter-out src/main.c, $(SRC_BIN))
 
-all:
-	mkdir -p bin
-	$(CC) $(CFLAGS) $(SRC) $(PKG) -o $(OUT)
+OUT_DIR=./out
+BIN_OUT=$(OUT_DIR)/epubinfo
+LIB_OUT=$(OUT_DIR)/libepubinfo.so
 
-release:
-	mkdir -p bin
-	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(SRC) $(PKG) -o $(OUT)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    LIB_OUT=$(OUT_DIR)/libepubinfo.dylib
+    SHARED_FLAG=-dynamiclib
+else
+    SHARED_FLAG=-shared
+endif
+
+all: bin lib
+
+bin: $(SRC_BIN)
+	mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) $(SRC_BIN) $(PKG) -o $(BIN_OUT)
+
+lib: $(SRC_LIB)
+	mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) $(SHARED_FLAG) $(SRC_LIB) $(PKG) -o $(LIB_OUT)
+
+bin-release: CFLAGS += $(RELEASE_FLAGS)
+bin-release: bin
+
+lib-release: CFLAGS += $(RELEASE_FLAGS)
+lib-release: lib
 
 clean:
-	rm -rf bin
+	rm -rf $(OUT_DIR)

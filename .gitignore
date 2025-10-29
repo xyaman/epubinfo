@@ -1,2 +1,2 @@
-bin/
-*.hex
+out/
+contents.xml
