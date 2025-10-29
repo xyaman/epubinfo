@@ -19,7 +19,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    clock_t t0 = clock();
+    struct timespec real_start, real_end;
+    clock_gettime(CLOCK_MONOTONIC, &real_start);
 
     FILE *fp = fopen(argv[1], "rb");
     if (fp == NULL) {
@@ -154,6 +155,9 @@ int main(int argc, char** argv) {
     free(opf_content);
     arena_free(&arena);
 
-    printf("\nTotal time: %.02fms\n", 1000 * (double)(clock() - t0) / CLOCKS_PER_SEC);
+    clock_gettime(CLOCK_MONOTONIC, &real_end);
+    double real_time_ms = (real_end.tv_sec - real_start.tv_sec) * 1000.0 + (real_end.tv_nsec - real_start.tv_nsec) / 1e6;
+
+    printf("\nTotal time: %.3fms\n", real_time_ms);
     return 0;
 }
