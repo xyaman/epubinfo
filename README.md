@@ -1,4 +1,4 @@
-## EPUB METADATA CLI
+## epubinfo
 
 Lightweight and fast CLI tool to extract basic EPUB metadata.
 Retrieve author, title, language, and character count.
@@ -22,14 +22,43 @@ date: 2014-02-26T13:00:00+00:00
 publisher: 株式会社KADOKAWA
 ```
 
+### Bun FFI Bindings
+
+Check the examples folder to see how to use it with bun.
+Just make sure to have the correct path for the library.
+
+```ts
+const epub = EpubMetadata.fromFile("path/to/epub");
+console.log({
+    title: epub.title,
+    language: epub.language,
+    description: epub.description,
+    publisher: epub.publisher,
+    subtitle: epub.subtitle,
+    authors: epub.authors,
+    creators: epub.creators,
+    identifiers: epub.identifiers,
+});
+
+// dont forget to free
+epub.free();
+```
+
 ### Build
 
 ```bash
-# debug build
+# output folder: ./out
+
+# bin & lib debug
 make
 
-# release build
-make release
+# release bin build
+make bin         # debug
+make bin-release # release
+
+# lib build (.so/.dylib extension based on uname -s)
+make lib         # debug
+make lib-release # release
 
 # clean
 make clean
