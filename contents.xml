@@ -1,0 +1,87 @@
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="bookid" version="2.0">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+        <meta content="Adobe InDesign 17.1" name="generator"/>
+        <meta content="cover.jpg" name="cover"/>
+        <dc:title>YouTube Secrets</dc:title>
+        <dc:creator>Sean Cannell &amp; Benji Travis</dc:creator>
+        <dc:subject/>
+        <dc:description>The Ultimate Guide to Growing Your Following and Making Money as a Video Influencer</dc:description>
+        <dc:publisher>Lioncrest Publishing</dc:publisher>
+        <dc:date>2022-04-26T15:39:15Z</dc:date>
+        <dc:source/>
+        <dc:relation/>
+        <dc:coverage/>
+        <dc:rights>Copyright © 2018, 2022 Sean Cannell &amp; Benji Travis. All rights reserved.</dc:rights>
+        <dc:language>en-US</dc:language>
+        <dc:identifier id="bookid">urn:uuid:a7159c2b-cab3-4090-b364-cf3640b8fd98</dc:identifier>
+    </metadata>
+    <manifest>
+        <item href="fonts/SIL-Open-Font-License-1.1.txt" id="SIL-Open-Font-License-1.1.txt" media-type="text/plain"/><item href="fonts/LeagueGothic-Regular.otf" id="LeagueGothic-Regular.otf" media-type="application/vnd.ms-opentype"/><item href="fonts/LeagueGothic-Italic.otf" id="LeagueGothic-Italic.otf" media-type="application/vnd.ms-opentype"/><item href="fonts/Montserrat-Regular.ttf" id="Montserrat-Regular.ttf" media-type="application/x-font-ttf"/><item href="fonts/Montserrat-Italic.ttf" id="Montserrat-Italic.ttf" media-type="application/x-font-ttf"/><item href="fonts/Montserrat-Bold.ttf" id="Montserrat-Bold.ttf" media-type="application/x-font-ttf"/><item href="fonts/Montserrat-BoldItalic.ttf" id="Montserrat-BoldItalic.ttf" media-type="application/x-font-ttf"/>
+        <item href="cover.xhtml" id="cover" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-1.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-1" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-2.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-2" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-3.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-3" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-4.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-4" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-5.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-5" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-6.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-6" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-7.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-7" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-8.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-8" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-9.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-9" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-10.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-10" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-11.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-11" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-12.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-12" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-13.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-13" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-14.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-14" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-15.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-15" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-16.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-16" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-17.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-17" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-18.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-18" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-19.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-19" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-20.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-20" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-21.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-21" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-22.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-22" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-23.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-23" media-type="application/xhtml+xml"/>
+        <item href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-24.xhtml" id="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-24" media-type="application/xhtml+xml"/>
+        <item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml"/>
+        <item href="css/style.css" id="style.css" media-type="text/css"/>
+        <item href="image/benji.jpg" id="benji.jpg" media-type="image/jpeg"/>
+        <item href="image/cover.jpg" id="cover.jpg" media-type="image/jpeg"/>
+        <item href="image/graphic-1.png" id="graphic-1.png" media-type="image/png"/>
+        <item href="image/graphic-2.png" id="graphic-2.png" media-type="image/png"/>
+        <item href="image/Lioncrest_FullColor_OnWhite.png" id="Lioncrest_FullColor_OnWhite.png" media-type="image/png"/>
+        <item href="image/sean.jpg" id="sean.jpg" media-type="image/jpeg"/>
+    </manifest>
+    <spine toc="ncx">
+        <itemref idref="cover" linear="no"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-1"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-2"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-3"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-4"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-5"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-6"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-7"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-8"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-9"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-10"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-11"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-12"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-13"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-14"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-15"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-16"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-17"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-18"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-19"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-20"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-21"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-22"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-23"/>
+        <itemref idref="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-24"/>
+    </spine>
+    <guide>
+        <reference href="cover.xhtml" title="Cover" type="cover"/>
+        <reference href="Sean-Cannell_YouTube-Secrets_PRODUCTION_v201-2.xhtml#_idContainer003" title="Table of Contents" type="toc"/>
+    </guide>
+</package>

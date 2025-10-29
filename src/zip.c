@@ -1,46 +1,9 @@
-#include <stdint.h>
 #include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 #include <zlib.h>
-
-#define ZIP_HEADER_LEN 4
-
-#define EOCDR_SIGNATURE              0x06054b50
-#define EOCDR_SIGNATURE_LEN          4
-#define EOCDR_LEN_NO_COMMENT         22    // bytes before optional comment
-#define EOCDR_OFF_SIGNATURE          0x00  // 4 bytes
-#define EOCDR_OFF_DISK_NUM           0x04  // 2 bytes
-#define EOCDR_OFF_START_CDIR_DISK    0x06  // 2 bytes
-#define EOCDR_OFF_ENTRIES_DISK       0x08  // 2 bytes
-#define EOCDR_OFF_TOTAL_ENTRIES      0x0A  // 2 bytes
-#define EOCDR_OFF_CDIR_SIZE          0x0C  // 4 bytes
-#define EOCDR_OFF_CDIR_OFFSET        0x10  // 4 bytes
-#define EOCDR_OFF_COMMENT_LEN        0x14  // 2 bytes
-#define EOCDR_OFF_COMMENT            0x16  // n bytes
-
-#define CDR_LEN_FIXED               46
-#define CDR_OFF_SIGNATURE           0x02014b50
-#define CDR_OFF_SIGNATURE_LEN       4
-#define CDR_OFF_COMPRESSION_METHOD  10
-#define CDR_OFF_COMPRESSED_SIZE     20
-#define CDR_OFF_UNCOMPRESSED_SIZE   24
-#define CDR_OFF_FILENAME_LEN        28
-#define CDR_OFF_EXTRA_FIELD_LEN     30
-#define CDR_OFF_FILE_COMMENT_LEN    32
-#define CDR_OFF_FILE_HEADER         42
-#define CDR_OFF_FILENAME            46
-
-#define LFH_LEN_FIXED               30
-
-
-// ZIP Notes
-// ref: https://www.vadeen.com/posts/the-zip-file-format/
-// ref: https://users.cs.jmu.edu/buchhofp/forensics/formats/pkzip.html
-//
-// - All multi-bytes numbers are little-endian
+#include <stdlib.h>
+#include <string.h>
+#include "zip.h"
 
 uint16_t read_le16(const unsigned char *p) {
     return p[0] | (p[1] << 8);
@@ -50,29 +13,14 @@ uint32_t read_le32(const unsigned char *p) {
     return p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
 }
 
-typedef struct {
-    uint16_t disk_num;
-    uint16_t start_cent_dir_disk;
-    uint16_t num_of_entries_disk;
-    uint16_t num_of_entries;
-    uint32_t size_cent_dir;
-    uint32_t cent_dir_offset;
-} eocdr_header_t;
+// public
+int zip_valid_header(FILE *fp) {
+    unsigned char header_buffer[ZIP_HEADER_LEN];
+    fread(header_buffer, sizeof(unsigned char), ZIP_HEADER_LEN, fp);
+    return header_buffer[0] == 0x50 && header_buffer[1] == 0x4b && header_buffer[2] == 0x03 && header_buffer[3] == 0x04;
+}
 
-typedef struct {
-    uint32_t uncompressed_size;
-    uint32_t compressed_size;
-    uint32_t file_offset;
-    uint16_t filename_len;
-    uint16_t extra_field_len;
-    uint16_t compression_method;
-    char filename[1024];
-} zip_entry_t;
-
-
-/// All values of header are initialized on success.
-/// Return 1 on success, 0 otherwise.
-int read_end_of_central_directory_record(FILE *fp, eocdr_header_t *header) {
+int zip_read_end_of_central_directory_record(FILE *fp, ZipEocdrHeader *header) {
     // Bytes | Description
     // ------+-------------------------------------------------------------------------
     //     4 | Signature (0x06054b50)
@@ -128,7 +76,7 @@ int read_end_of_central_directory_record(FILE *fp, eocdr_header_t *header) {
     return 1;
 }
 
-zip_entry_t* read_central_directory(FILE *fp, eocdr_header_t header) {
+ZipEntry* zip_read_central_directory(FILE *fp, ZipEocdrHeader header) {
     // Bytes | Description
     // ------+-------------------------------------------------------------------------
     //     4 | Signature (0x02014b50)
@@ -154,7 +102,7 @@ zip_entry_t* read_central_directory(FILE *fp, eocdr_header_t header) {
     //     m | Extra field
     //     k | File comment
 
-    zip_entry_t *entries = malloc(sizeof(zip_entry_t) * header.num_of_entries);
+    ZipEntry *entries = malloc(sizeof(ZipEntry) * header.num_of_entries);
     if (!entries) return NULL;
 
     size_t offset = header.cent_dir_offset;
@@ -168,7 +116,7 @@ zip_entry_t* read_central_directory(FILE *fp, eocdr_header_t header) {
         uint16_t extra_len = read_le16(&buffer[CDR_OFF_EXTRA_FIELD_LEN]);
         uint16_t comment_len = read_le16(&buffer[CDR_OFF_FILE_COMMENT_LEN]);
 
-        zip_entry_t entry;
+        ZipEntry entry;
         entry.file_offset = read_le32(&buffer[CDR_OFF_FILE_HEADER]);
         fread(entry.filename, sizeof(char), filename_len, fp);
         entry.filename[filename_len] = 0;
@@ -186,22 +134,24 @@ zip_entry_t* read_central_directory(FILE *fp, eocdr_header_t header) {
     return entries;
 }
 
-
-/// `output` will be allocated inside this function
-unsigned char *uncompress_entry(FILE *fp, zip_entry_t *entry) {
-
+char *zip_uncompress_entry(FILE *fp, ZipEntry *entry) {
+    clock_t t0 = clock();
     fseek(fp, LFH_LEN_FIXED + entry->file_offset + entry->filename_len + entry->extra_field_len, SEEK_SET);
+
     unsigned char *compressed_data = malloc(entry->compressed_size);
+    if (compressed_data == NULL) return NULL;
 
     fread(compressed_data, sizeof(unsigned char), entry->compressed_size, fp);
-    unsigned char *output = malloc(entry->uncompressed_size);
+    char *output = malloc(entry->uncompressed_size);
+    if (output == NULL) return NULL;
 
     if (entry->compression_method == 0) {
+        memcpy(output, compressed_data, entry->uncompressed_size);
     } else if (entry->compression_method == 8) {
         z_stream strm = {0};
         strm.next_in = compressed_data;
         strm.avail_in = entry->compressed_size;
-        strm.next_out = output;
+        strm.next_out = (Bytef *)output;
         strm.avail_out = entry->uncompressed_size;
 
         if (inflateInit2(&strm, -MAX_WBITS) != Z_OK) {
@@ -223,76 +173,20 @@ unsigned char *uncompress_entry(FILE *fp, zip_entry_t *entry) {
     }
 
     free(compressed_data);
+    printf("[INFO] %.*s uncompressed in %0.2fms\n", entry->filename_len, entry->filename, 1000 * (double)(clock() - t0) / CLOCKS_PER_SEC);
     return output;
 }
 
 
-int main(int argc, char** argv) {
-    if (argc < 2) {
-        printf("Usage: %s <epub_filename>\nExiting...", argv[0]);
-        return 1;
-    }
-
-    clock_t t0 = clock();
-
-    FILE *fp = fopen(argv[1], "rb");
-    if (fp == NULL) {
-        printf("Error opening %s, error code: %d\n", argv[1], errno);
-        return 1;
-    }
-
-    unsigned char header_buffer[ZIP_HEADER_LEN];
-    fread(header_buffer, sizeof(unsigned char), ZIP_HEADER_LEN, fp);
-
-    if (!(header_buffer[0] == 0x50 && header_buffer[1] == 0x4b && header_buffer[2] == 0x03 && header_buffer[3] == 0x04)) {
-        printf("Invalid zip header file. Exiting...\n");
-        fclose(fp);
-        return 1;
-    }
-
-    eocdr_header_t header;
-    int success = read_end_of_central_directory_record(fp, &header);
-    if (!success) {
-        printf("Can't find End Of Central Directory Record\n");
-        fclose(fp);
-        return 1;
-    }
-
-    zip_entry_t *entries = read_central_directory(fp, header);
-    if (entries == NULL) {
-        printf("Error reading Central Directory Record\n");
-        fclose(fp);
-        return 1;
-    }
-
-    zip_entry_t container = {0};
-    for (int i = 0; i < header.num_of_entries; i++) {
+ZipEntry* zip_find_entry_by_filename(ZipEntry *entries, uint16_t num_of_entries, char *filename) {
+    for (int i = 0; i < num_of_entries; i++) {
         if (entries[i].filename_len == 0) continue;
         if (entries[i].filename[entries[i].filename_len - 1] == '/') continue;
 
-        if (strcmp(entries[i].filename, "META-INF/container.xml") == 0) {
-            container = entries[i];
-            break;
+        if (strcmp(entries[i].filename, filename) == 0) {
+            return &entries[i];
         }
     }
 
-    printf(
-        "filename: %s, compressed: %hu, offset: %u, size: %u\n",
-        container.filename,
-        container.compression_method,
-        container.file_offset,
-        container.compressed_size
-    );
-
-
-    unsigned char *out_buffer = uncompress_entry(fp, &container);
-    if (out_buffer != NULL) {
-        printf("container content: %.*s\n", container.uncompressed_size, out_buffer);
-    }
-
-    fclose(fp);
-    free(entries);
-
-    printf("\nTotal time: %f seconds\n", (double)(clock() - t0) / CLOCKS_PER_SEC);
-    return 0;
+    return NULL;
 }

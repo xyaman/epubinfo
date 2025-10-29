@@ -3,7 +3,7 @@ CFLAGS=-Wall -Wextra -pedantic
 RELEASE_FLAGS=-O2
 PKG=-I./include -lz
 
-SRC=main.c
+SRC=$(wildcard src/*.c)
 OUT=./bin/epubinfo
 
 all:
