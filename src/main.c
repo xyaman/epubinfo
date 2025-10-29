@@ -91,8 +91,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    printf("OPF File: %s\n", opf_filename);
-
     // EPUB: rootfile decompression
     ZipEntry *opf_entry = zip_find_entry_by_filename(entries, header.num_of_entries, opf_filename);
     if (opf_entry == NULL) {
@@ -106,26 +104,47 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    printf("OPF Content:\n%.*s\n", opf_entry->uncompressed_size, opf_content);
-
-
     // EPUB: get book metadata (xml parsing)
     // We are not using opf_filename anymore so it's safe to reset the arena
-    // and re-use it here.
     arena_reset(&arena);
 
     // reset parser
     parser.cursor = 0;
     parser.content = opf_content;
 
+    // move parser cursor until metadata
     int inside_metadata = 0;
     while (!inside_metadata) {
         XmlValue value = xml_next(&arena, &parser);
         if (value.type == OPEN_TAG || value.type == CLOSE_TAG || value.type == SELF_CLOSE_TAG) {
             char *name = xml_tag_get_name(&arena, value.content);
-            printf("tag name: %s\n", name);
             if (strcmp(name, "metadata") == 0) inside_metadata = 1;
         }
+        arena_reset(&arena);
+    }
+
+    // start reading metadata
+    // reading until </metadata> is found
+    while (1) {
+        XmlValue value = xml_next(&arena, &parser);
+        if (value.type == CLOSE_TAG) {
+            char *tag_name = xml_tag_get_name(&arena, value.content);
+            if (strcmp(tag_name, "metadata") == 0) break;
+        }
+
+        if (value.type == OPEN_TAG) {
+            char *tag_name = xml_tag_get_name(&arena, value.content);
+            if (tag_name[0] == 'd' && tag_name[1] == 'c' && tag_name[2] == ':') {
+                XmlValue text = xml_next(&arena, &parser);
+                if (text.type != TEXT_TAG) {
+                    printf("Malformed epub (%s).\n", &tag_name[3]);
+                    return 1;
+                }
+
+                printf("%s: %s\n", &tag_name[3], text.content);
+            }
+        }
+
         arena_reset(&arena);
     }
 

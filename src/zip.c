@@ -135,7 +135,7 @@ ZipEntry* zip_read_central_directory(FILE *fp, ZipEocdrHeader header) {
 }
 
 char *zip_uncompress_entry(FILE *fp, ZipEntry *entry) {
-    clock_t t0 = clock();
+    // clock_t t0 = clock();
     fseek(fp, LFH_LEN_FIXED + entry->file_offset + entry->filename_len + entry->extra_field_len, SEEK_SET);
 
     unsigned char *compressed_data = malloc(entry->compressed_size);
@@ -173,7 +173,7 @@ char *zip_uncompress_entry(FILE *fp, ZipEntry *entry) {
     }
 
     free(compressed_data);
-    printf("[INFO] %.*s uncompressed in %0.2fms\n", entry->filename_len, entry->filename, 1000 * (double)(clock() - t0) / CLOCKS_PER_SEC);
+    // printf("[INFO] %.*s uncompressed in %0.2fms\n", entry->filename_len, entry->filename, 1000 * (double)(clock() - t0) / CLOCKS_PER_SEC);
     return output;
 }
 
