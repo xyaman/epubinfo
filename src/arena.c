@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include "arena.h"
+#include "epubinfo/arena.h"
 
 static inline uintptr_t align_forward(uintptr_t ptr, size_t alignment) {
     size_t mask = alignment - 1;

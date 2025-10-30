@@ -8,9 +8,9 @@
 
 #include <zlib.h>
 
-#include "xml.h"
-#include "arena.h"
-#include "zip.h"
+#include "epubinfo/xml.h"
+#include "epubinfo/arena.h"
+#include "epubinfo/zip.h"
 
 
 int main(int argc, char** argv) {

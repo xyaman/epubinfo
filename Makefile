@@ -1,38 +1,62 @@
-CC=gcc
-CFLAGS=-Wall -Wextra -pedantic -fPIC
-RELEASE_FLAGS=-O2
-PKG=-I./include -lz
+# Compiler and flags
+CC = gcc
+CFLAGS = -Wall -Wextra -pedantic -fPIC
 
-SRC_BIN=$(wildcard src/*.c)
-SRC_LIB=$(filter-out src/main.c, $(SRC_BIN))
+RELEASE_FLAGS = -O2
+PKG = -I$(CURDIR)/include -lz
 
-OUT_DIR=./out
-BIN_OUT=$(OUT_DIR)/epubinfo
-LIB_OUT=$(OUT_DIR)/libepubinfo.so
+# Source files
+SRC = $(wildcard src/*.c)
+SRC_BIN = $(filter-out src/lib.c, $(SRC))   # For optional binary
+SRC_LIB = $(filter-out src/main.c, $(SRC))  # For library (.a / .so)
 
+# Output directories
+OUT_DIR = $(CURDIR)/out
+BIN_OUT = $(OUT_DIR)/epubinfo
+STATIC_LIB = $(OUT_DIR)/libepubinfo.a
+SHARED_LIB = $(OUT_DIR)/libepubinfo.so
+
+# Detect OS for dynamic library extension
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
-    LIB_OUT=$(OUT_DIR)/libepubinfo.dylib
-    SHARED_FLAG=-dynamiclib
+    SHARED_LIB = $(OUT_DIR)/libepubinfo.dylib
+    SHARED_FLAGS = -dynamiclib
 else
-    SHARED_FLAG=-shared
+
+    SHARED_FLAGS = -shared
 endif
 
-all: bin lib
+all: lib-static lib-shared
 
-bin: $(SRC_BIN)
-	mkdir -p $(OUT_DIR)
-	$(CC) $(CFLAGS) $(SRC_BIN) $(PKG) -o $(BIN_OUT)
+lib-static: $(SRC_LIB:.c=.o)
+	@mkdir -p $(OUT_DIR)
+	ar rcs $(STATIC_LIB) $(SRC_LIB:.c=.o)
 
-lib: $(SRC_LIB)
-	mkdir -p $(OUT_DIR)
-	$(CC) $(CFLAGS) $(SHARED_FLAG) $(SRC_LIB) $(PKG) -o $(LIB_OUT)
+lib-shared: $(SRC_LIB:.c=.so.o)
+	@mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) $(SHARED_FLAGS) $^ $(PKG) -o $(SHARED_LIB)
+
+# Object files for static library
+%.o: %.c
+	$(CC) $(CFLAGS) $(PKG) -c $< -o $@
+
+# Object files for shared library (position-independent)
+%.so.o: %.c
+	$(CC) $(CFLAGS) -fPIC $(PKG) -c $< -o $@
+
+bin: $(SRC_BIN:.c=.o)
+	@mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) $^ $(PKG) -o $(BIN_OUT)
+
+# Release versions
+lib-static-release: CFLAGS += $(RELEASE_FLAGS)
+lib-static-release: lib-static
+
+lib-shared-release: CFLAGS += $(RELEASE_FLAGS)
+lib-shared-release: lib-shared
 
 bin-release: CFLAGS += $(RELEASE_FLAGS)
 bin-release: bin
 
-lib-release: CFLAGS += $(RELEASE_FLAGS)
-lib-release: lib
-
 clean:
-	rm -rf $(OUT_DIR)
+	rm -rf $(OUT_DIR) *.o *.so.o

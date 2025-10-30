@@ -1,9 +1,12 @@
 ## epubinfo
 
-Lightweight and fast CLI tool to extract basic EPUB metadata.
-Retrieve author, title, language, and character count.
+Lightweight and fast CLI tool for extracting basic EPUB metadata,
+including author, title, language, and more.
 
-> Only support for unencrypted epubs
+> Note: This library performs minimal validation to maximize speed,
+> so it may work even with invalid or malformed EPUB files.
+
+> Only unencrypted EPUB files are supported.
 
 ### Usage
 
@@ -47,21 +50,44 @@ epub.free();
 ### Build
 
 ```bash
-# output folder: ./out
+# Build both static (.a) and shared (.so/.dylib) libraries and optional binary
 
-# bin & lib debug
 make
 
-# release bin build
-make bin         # debug
-make bin-release # release
+# Release builds
+make bin-release    # release binary
+make lib-static-release  # release static library
+make lib-shared-release  # release shared library (.so / .dylib)
 
-# lib build (.so/.dylib extension based on uname -s)
-make lib         # debug
-make lib-release # release
+# Optional: build only binary or library
+make bin
+make lib-static
 
-# clean
+make lib-shared
+
+# Clean build artifacts
 make clean
+```
+
+### Using `epubinfo` library in another c project
+
+```bash
+# Clone the repo
+git clone https://github.com/xyaman/epubinfo deps/epubinfo
+
+# Build the library
+make -C deps/epubinfo lib-static-release   # for static linking in C
+make -C deps/epubinfo lib-shared-release   # for dynamic linking / FFI
+
+# Include the headers in your C code
+#include "epubinfo/lib.h"
+
+# Link the library
+# Static: you need to link to zlib
+gcc main.c -Ideps/epubinfo/include deps/epubinfo/out/libepubinfo.a -lz -o myapp
+
+# Dynamic
+gcc main.c -Ideps/epubinfo/include deps/epubinfo/out/libepubinfo.so -o myapp
 ```
 
 ### Dependencies

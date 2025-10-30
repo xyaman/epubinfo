@@ -22,6 +22,11 @@ typedef struct {
     StringArray creator;
 } EpubMetadata;
 
+typedef struct {
+    EpubMetadata *metadata;
+} EpubDocument;
+
+
 
 static void StringArray_append(StringArray *arr, const char *value) {
     if (!value) return;

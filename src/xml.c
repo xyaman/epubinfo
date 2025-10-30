@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "arena.h"
-#include "xml.h"
+#include "epubinfo/arena.h"
+#include "epubinfo/xml.h"
 
 /// Gets the name of a tag
 char *xml_tag_get_name(Arena *arena, char *tag) {

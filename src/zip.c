@@ -3,7 +3,7 @@
 #include <zlib.h>
 #include <stdlib.h>
 #include <string.h>
-#include "zip.h"
+#include "epubinfo/zip.h"
 
 uint16_t read_le16(const unsigned char *p) {
     return p[0] | (p[1] << 8);
