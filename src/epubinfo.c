@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "zip.h"
-#include "xml.h"
+#include "epubinfo/zip.h"
+#include "epubinfo/xml.h"
 
 typedef struct {
     char **items;

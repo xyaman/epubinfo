@@ -7,8 +7,8 @@ PKG = -I$(CURDIR)/include -lz
 
 # Source files
 SRC = $(wildcard src/*.c)
-SRC_BIN = $(filter-out src/lib.c, $(SRC))   # For optional binary
-SRC_LIB = $(filter-out src/main.c, $(SRC))  # For library (.a / .so)
+SRC_BIN = $(SRC) bin/main.c # binary
+SRC_LIB = $(SRC)			# library
 
 # Output directories
 OUT_DIR = $(CURDIR)/out
@@ -59,4 +59,4 @@ bin-release: CFLAGS += $(RELEASE_FLAGS)
 bin-release: bin
 
 clean:
-	rm -rf $(OUT_DIR) *.o *.so.o
+	rm -rf $(OUT_DIR) src/*.o src/*.so.o bin/*.o

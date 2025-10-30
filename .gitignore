@@ -1,2 +1,3 @@
 out/
 contents.xml
+*.o

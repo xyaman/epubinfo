@@ -1,6 +1,6 @@
 import { dlopen, FFIType, read, ptr as Ptr } from "bun:ffi";
 
-const lib = dlopen("./bin/libepubinfo.so", {
+const lib = dlopen("./out/libepubinfo.so", {
     get_epub_info: { args: [FFIType.cstring], returns: FFIType.ptr },
     free_epub_info: { args: [FFIType.ptr], returns: FFIType.void },
 
