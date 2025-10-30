@@ -1,34 +1,46 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "epubinfo/zip.h"
 #include "epubinfo/xml.h"
+#include "epubinfo/epubinfo.h"
 
-typedef struct {
+// internal declarations
+typedef struct StringArray StringArray;
+void StringArray_append(StringArray *arr, const char *value);
+void StringArray_free(StringArray *arr);
+
+struct StringArray {
     char **items;
     size_t count;
     size_t capacity;
-} StringArray;
+};
 
-typedef struct {
+struct EpubMetadata {
     char *title;
+    char *subtitle;
     char *language;
     char *description;
-    char *subtitle;
     char *publisher;
 
     StringArray author;
-    StringArray identifier;
     StringArray creator;
-} EpubMetadata;
+    StringArray identifier;
+};
 
-typedef struct {
-    EpubMetadata *metadata;
-} EpubDocument;
+struct EpubDocument {
+    char *filename;
+    ZipEntry *entries;
+    size_t num_of_entries;
+    EpubMetadata metadata;
+    uint8_t *cover_image;
+    size_t cover_image_size;
+    char last_error[256];
+};
 
 
-
-static void StringArray_append(StringArray *arr, const char *value) {
+void StringArray_append(StringArray *arr, const char *value) {
     if (!value) return;
 
     if (arr->count == arr->capacity) {
@@ -48,12 +60,12 @@ static void StringArray_append(StringArray *arr, const char *value) {
     arr->count += 1;
 }
 
-static void StringArray_free(StringArray *arr) {
+void StringArray_free(StringArray *arr) {
     for (int i = 0; i < arr->count; i++) free(arr->items[i]);
     free(arr->items);
 }
 
-EpubMetadata *get_epub_info(char *filename) {
+EpubDocument* EpubDocument_from_file(const char *filename) {
     FILE *fp = fopen(filename, "rb");
     if (!fp) {
         fprintf(stderr, "Error opening %s\n", filename);
@@ -158,7 +170,7 @@ EpubMetadata *get_epub_info(char *filename) {
         arena_reset(&arena);
     }
 
-    EpubMetadata *meta = calloc(1, sizeof(EpubMetadata));
+    EpubMetadata meta = {0};
     while (1) {
         XmlValue v = xml_next(&arena, &parser);
         if (v.type == CLOSE_TAG) {
@@ -174,100 +186,118 @@ EpubMetadata *get_epub_info(char *filename) {
                     const char *field = &tag_name[3];
                     // -- individual objects
                     if (strcmp(field, "title") == 0)
-                        meta->title = strdup(text.content);
+                        meta.title = strdup(text.content);
                     else if (strcmp(field, "language") == 0)
-                        meta->language = strdup(text.content);
+                        meta.language = strdup(text.content);
                     else if (strcmp(field, "description") == 0)
-                        meta->description = strdup(text.content);
+                        meta.description = strdup(text.content);
                     else if (strcmp(field, "publisher") == 0)
-                        meta->publisher = strdup(text.content);
+                        meta.publisher = strdup(text.content);
                     else if (strcmp(field, "subject") == 0)
-                        meta->subtitle = strdup(text.content);
+                        meta.subtitle = strdup(text.content);
 
                     // -- lists/arrays
                     else if (strcmp(field, "creator") == 0)
-                        StringArray_append(&meta->creator, text.content);
+                        StringArray_append(&meta.creator, text.content);
                     else if (strcmp(field, "identifier") == 0)
-                        StringArray_append(&meta->identifier, text.content);
+                        StringArray_append(&meta.identifier, text.content);
                     else if (strcmp(field, "author") == 0)
-                        StringArray_append(&meta->author, text.content);
+                        StringArray_append(&meta.author, text.content);
                 }
             }
         }
         arena_reset(&arena);
     }
 
+    EpubDocument *doc = calloc(1, sizeof(EpubDocument));
+    doc->filename = strdup(filename);
+    doc->entries = entries;
+    doc->num_of_entries = header.num_of_entries;
+    doc->metadata = meta;
+
     fclose(fp);
-    free(entries);
     free(container_content);
     free(opf_content);
     arena_free(&arena);
     free(opf_filename);
 
-    return meta;
+    return doc;
 }
 
-void free_epub_info(EpubMetadata *epub) {
-    if (!epub) return;
+void EpubDocument_free(EpubDocument *doc) {
+    if (!doc) return;
 
-    free(epub->title);
-    free(epub->language);
-    free(epub->description);
-    free(epub->subtitle);
-    free(epub->publisher);
+    free(doc->entries);
+    free(doc->filename);
+    free(doc->cover_image);
 
-    StringArray_free(&epub->author);
-    StringArray_free(&epub->creator);
-    StringArray_free(&epub->identifier);
+    free(doc->metadata.title);
+    free(doc->metadata.language);
+    free(doc->metadata.description);
+    free(doc->metadata.subtitle);
+    free(doc->metadata.publisher);
 
-    free(epub);
+    StringArray_free(&doc->metadata.author);
+    StringArray_free(&doc->metadata.creator);
+    StringArray_free(&doc->metadata.identifier);
+
+    free(doc);
 }
 
-// -- ffi getters
-
-int get_epub_author_count(EpubMetadata *epub) {
-    return epub ? epub->author.count : 0;
+const EpubMetadata* EpubDocument_get_metadata(EpubDocument *doc) {
+    return doc ? &doc->metadata : NULL;
 }
 
-const char *get_epub_author_at(EpubMetadata *epub, int index) {
-    if (!epub || index < 0 || index >= epub->author.count) return NULL;
-    return epub->author.items[index];
+// title
+const char* EpubMetadata_get_title(const EpubMetadata *meta) {
+    return (meta && meta->title) ? meta->title : "";
 }
 
-int get_epub_creator_count(EpubMetadata *epub) {
-    return epub ? epub->creator.count : 0;
+const char* EpubMetadata_get_subtitle(const EpubMetadata *meta) {
+    return (meta && meta->subtitle) ? meta->subtitle : "";
 }
 
-const char *get_epub_creator_at(EpubMetadata *epub, int index) {
-    if (!epub || index < 0 || index >= epub->creator.count) return NULL;
-    return epub->creator.items[index];
+const char* EpubMetadata_get_language(const EpubMetadata *meta) {
+    return (meta && meta->language) ? meta->language : "";
 }
 
-int get_epub_identifier_count(EpubMetadata *epub) {
-    return epub ? epub->identifier.count : 0;
+
+const char* EpubMetadata_get_description(const EpubMetadata *meta) {
+    return (meta && meta->description) ? meta->description : "";
 }
 
-const char *get_epub_identifier_at(EpubMetadata *epub, int index) {
-    if (!epub || index < 0 || index >= epub->identifier.count) return NULL;
-    return epub->identifier.items[index];
+const char* EpubMetadata_get_publisher(const EpubMetadata *meta) {
+    return (meta && meta->publisher) ? meta->publisher : "";
 }
 
-const char *get_epub_title(EpubMetadata *epub) {
-    return epub && epub->title ? epub->title : "";
+
+int EpubMetadata_get_author_count(const EpubMetadata *meta) {
+    return meta ? (int)meta->author.count : 0;
 }
 
-const char *get_epub_language(EpubMetadata *epub) {
-    return epub && epub->language ? epub->language : "";
+const char* EpubMetadata_get_author(const EpubMetadata *meta, int index) {
+    return (meta && index >= 0 && index < (int)meta->author.count)
+        ? meta->author.items[index]
+        : NULL;
 }
 
-const char *get_epub_description(EpubMetadata *epub) {
-    return epub && epub->description ? epub->description : "";
+
+int EpubMetadata_get_creator_count(const EpubMetadata *meta) {
+    return meta ? (int)meta->creator.count : 0;
 }
 
-const char *get_epub_publisher(EpubMetadata *epub) {
-    return epub && epub->publisher ? epub->publisher : "";
+const char* EpubMetadata_get_creator(const EpubMetadata *meta, int index) {
+    return (meta && index >= 0 && index < (int)meta->creator.count)
+        ? meta->creator.items[index]
+        : NULL;
 }
 
-const char *get_epub_subtitle(EpubMetadata *epub) {
-    return epub && epub->subtitle ? epub->subtitle : "";
+int EpubMetadata_get_identifier_count(const EpubMetadata *meta) {
+    return meta ? (int)meta->identifier.count : 0;
+}
+
+const char* EpubMetadata_get_identifier(const EpubMetadata *meta, int index) {
+    return (meta && index >= 0 && index < (int)meta->identifier.count)
+        ? meta->identifier.items[index]
+        : NULL;
 }
